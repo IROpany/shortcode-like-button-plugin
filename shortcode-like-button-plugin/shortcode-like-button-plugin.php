@@ -9,7 +9,7 @@ Domain Path: languages
 Text Domain: wp-total-hacks
 */
 
-// ファイルへの直接アクセスした場合は終了する
+// ファイルへの直接アクセスを防止
 if ( ! defined( 'ABSPATH' ) ) {
     exit; 
 }
@@ -25,18 +25,20 @@ function shortcode_like_button_enqueue_scripts() {
 }
 add_action('wp_enqueue_scripts', 'shortcode_like_button_enqueue_scripts');
 
-// ショートコードを処理するための関数
+// ショートコードを処理する関数
 function shortcode_like_button_shortcode($atts) {
-    // 投稿のIDを取得
-    $post_id = get_the_ID();
+    $atts = shortcode_atts(array(
+        'post_id' => get_the_ID(), // 引数から投稿IDを受け取る
+    ), $atts);
 
-    // カウントを取得または初期化
-    $like_count = get_post_meta($post_id, 'shortcode_like_count', true);
-    if (!$like_count) {
-        $like_count = 0;
+    $post_id = absint($atts['post_id']);
+    if (!$post_id) {
+        return ''; // 投稿IDが無効なら何も出力しない
     }
 
-    // ボタンのHTMLを生成
+    $like_count = get_post_meta($post_id, 'shortcode_like_count', true);
+    $like_count = $like_count ?: 0;
+
     $button_html = '
         <p>いいねの数: <span class="like-count-' . esc_attr($post_id) . '">' . esc_html($like_count) . '</span></p>
         <button class="my-like-button" data-post-id="' . esc_attr($post_id) . '" data-action="increment_likes">' . esc_html__('いいね', 'shortcode-like-button') . '</button>
@@ -46,13 +48,17 @@ function shortcode_like_button_shortcode($atts) {
 }
 add_shortcode('shortcode_like_button', 'shortcode_like_button_shortcode');
 
-// カウントを増やすためのAJAX処理
+// いいねカウントを増やすためのAJAX処理
 function increment_likes() {
     check_ajax_referer('shortcode-like-button-nonce', 'security');
 
-    $post_id = absint($_POST['post_id']); // ポストIDをサニタイズ
+    $post_id = absint($_POST['post_id']);
+    if (!$post_id) {
+        wp_die('Invalid post ID');
+    }
+
     $like_count = get_post_meta($post_id, 'shortcode_like_count', true);
-    $like_count++;
+    $like_count = $like_count ? $like_count + 1 : 1;
 
     update_post_meta($post_id, 'shortcode_like_count', $like_count);
 
@@ -61,11 +67,4 @@ function increment_likes() {
 }
 add_action('wp_ajax_increment_likes', 'increment_likes');
 add_action('wp_ajax_nopriv_increment_likes', 'increment_likes');
-
-// カウントの初期化
-function init_like_count() {
-    $post_id = get_the_ID();
-    add_post_meta($post_id, 'shortcode_like_count', 0, true);
-}
-add_action('wp', 'init_like_count');
 ?>
