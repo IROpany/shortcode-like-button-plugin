@@ -16,7 +16,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // スクリプトを読み込む
 function shortcode_like_button_enqueue_scripts() {
-    wp_enqueue_script('jquery'); // jQueryを読み込む
     wp_enqueue_script('shortcode-like-button', plugin_dir_url(__FILE__) . 'js/shortcode-like-button.js', array('jquery'), false , true); // カスタムスクリプトを読み込む
     wp_localize_script('shortcode-like-button', 'shortcode_like_button_params', array(
         'ajax_url' => admin_url('admin-ajax.php'),
