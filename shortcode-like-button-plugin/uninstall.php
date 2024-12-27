@@ -1,4 +1,11 @@
 <?php
+
+// ファイルへの直接アクセスした場合は終了する
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; 
+}
+
+
 // プラグインがアンインストールされる場合のみ実行されるようにする
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
     exit;
